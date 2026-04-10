@@ -1,6 +1,6 @@
 {
   "name": "logora-socketio",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Socketio plugin for Logora – enables real-time communication.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

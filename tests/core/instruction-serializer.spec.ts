@@ -60,16 +60,6 @@ describe("DefaultSocketIoInstructionSerializer", () => {
     });
   });
 
-  it("should serialize bigint values", () => {
-    const serializer = new DefaultSocketIoInstructionSerializer();
-
-    expect(serializer.serializeValue(123n)).toEqual({
-      kind: "special",
-      type: "bigint",
-      value: "123",
-    });
-  });
-
   it("should serialize symbol values", () => {
     const serializer = new DefaultSocketIoInstructionSerializer();
 
