@@ -1,0 +1,85 @@
+import type { LogEntry } from "logora/module";
+
+import type { SocketIoInstructionSerializer } from "../models/socket-io-instruction-serializer.interface";
+import type {
+  SocketIoEmptyInstruction,
+  SocketIoLogInstruction,
+  SocketIoPrintInstruction,
+  SocketIoTitleInstruction,
+} from "../models/socket-io-instruction.interface";
+
+/**
+ * Creates structured Socket.IO instructions from Logora calls.
+ */
+export class SocketIoInstructionFactory {
+  private readonly _serializer: SocketIoInstructionSerializer;
+
+  /**
+   * Creates a new instruction factory instance.
+   *
+   * @param serializer The serializer used to convert runtime values.
+   */
+  public constructor(serializer: SocketIoInstructionSerializer) {
+    this._serializer = serializer;
+  }
+
+  /**
+   * Creates a structured log instruction from a Logora entry.
+   *
+   * @param entry The log entry to convert.
+   * @returns A structured log instruction.
+   */
+  public createLogInstruction(entry: LogEntry): SocketIoLogInstruction {
+    return {
+      kind: "log",
+      entry: this._serializer.serializeLogEntry(entry),
+    };
+  }
+
+  /**
+   * Creates a structured print instruction.
+   *
+   * @param message The raw print message.
+   * @param args The runtime arguments associated with the message.
+   * @returns A structured print instruction.
+   */
+  public createPrintInstruction(
+    message: string,
+    args: unknown[],
+  ): SocketIoPrintInstruction {
+    return {
+      kind: "print",
+      message,
+      args: args.map(
+        (arg: unknown): ReturnType<typeof this._serializer.serializeValue> =>
+          this._serializer.serializeValue(arg),
+      ),
+    };
+  }
+
+  /**
+   * Creates a structured title instruction.
+   *
+   * @param title The title to emit.
+   * @returns A structured title instruction.
+   */
+  public createTitleInstruction(title: string): SocketIoTitleInstruction {
+    return {
+      kind: "title",
+      title,
+    };
+  }
+
+  /**
+   * Creates a structured empty-line instruction.
+   *
+   * @param count The requested number of empty lines.
+   * @returns A structured empty instruction.
+   */
+  public createEmptyInstruction(count: number): SocketIoEmptyInstruction {
+    return {
+      kind: "empty",
+      count,
+    };
+  }
+}
