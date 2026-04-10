@@ -1,0 +1,65 @@
+{
+  "name": "logora-socketio",
+  "version": "0.1.0",
+  "description": "Socketio plugin for Logora – enables real-time communication.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "lint": "eslint src tests --ext .ts",
+    "lint:fix": "eslint src tests --ext .ts --fix",
+    "test": "vitest run",
+    "test:dev": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "build": "tsup",
+    "build:dev": "tsup --watch",
+    "build:prod": "npm run clean && npm run lint && npm run build",
+    "clean": "rimraf dist",
+    "check": "npm run lint && npm run test && npm run build",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build:prod"
+  },
+  "keywords": [
+    "logger",
+    "logora",
+    "typescript",
+    "logging",
+    "websocket",
+    "socket.io",
+    "real-time"
+  ],
+  "author": "Sébastien Bosmans <https://github.com/boseba>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boseba/logora-socketio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/boseba/logora-socketio/issues"
+  },
+  "homepage": "https://github.com/boseba/logora-socketio#readme",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.1",
+    "@vitest/coverage-v8": "^3.1.2",
+    "eslint": "^9.25.1",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.31.0",
+    "vitest": "^3.1.2"
+  },
+  "dependencies": {
+    "logora": "^2.0.5"
+  }
+}
