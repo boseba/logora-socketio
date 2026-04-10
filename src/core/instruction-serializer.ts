@@ -66,9 +66,6 @@ export class DefaultSocketIoInstructionSerializer implements SocketIoInstruction
       case "undefined":
         return this._serializeSpecialValue("undefined", "undefined");
 
-      case "bigint":
-        return this._serializeSpecialValue("bigint", value.toString());
-
       case "symbol":
         return this._serializeSpecialValue("symbol", value.toString());
 
