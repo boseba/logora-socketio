@@ -10,16 +10,17 @@ describe("SocketIoInstructionFactory", () => {
     const serializeLogEntryMock = vi.fn().mockReturnValue({
       timestamp: "2026-04-11T12:00:00.000Z",
       type: LogType.Info,
+      typeName: "Info",
       message: "Application started",
       args: [],
       scope: "App",
     });
 
-    const serializeValueMock = vi.fn();
+    const serializeArgMock = vi.fn();
 
     const serializer: SocketIoInstructionSerializer = {
       serializeLogEntry: serializeLogEntryMock,
-      serializeValue: serializeValueMock,
+      serializeArg: serializeArgMock,
     };
 
     const factory = new SocketIoInstructionFactory(serializer);
@@ -41,6 +42,7 @@ describe("SocketIoInstructionFactory", () => {
       entry: {
         timestamp: "2026-04-11T12:00:00.000Z",
         type: LogType.Info,
+        typeName: "Info",
         message: "Application started",
         args: [],
         scope: "App",
@@ -50,14 +52,14 @@ describe("SocketIoInstructionFactory", () => {
 
   it("should create a print instruction and serialize all arguments", () => {
     const serializeLogEntryMock = vi.fn();
-    const serializeValueMock = vi
+    const serializeArgMock = vi
       .fn()
-      .mockReturnValueOnce("first")
-      .mockReturnValueOnce(42);
+      .mockReturnValueOnce("value")
+      .mockReturnValueOnce("42");
 
     const serializer: SocketIoInstructionSerializer = {
       serializeLogEntry: serializeLogEntryMock,
-      serializeValue: serializeValueMock,
+      serializeArg: serializeArgMock,
     };
 
     const factory = new SocketIoInstructionFactory(serializer);
@@ -67,23 +69,20 @@ describe("SocketIoInstructionFactory", () => {
       42,
     ]);
 
-    expect(serializeValueMock).toHaveBeenCalledTimes(2);
-    expect(serializeValueMock).toHaveBeenNthCalledWith(1, "value");
-    expect(serializeValueMock).toHaveBeenNthCalledWith(2, 42);
+    expect(serializeArgMock).toHaveBeenCalledTimes(2);
+    expect(serializeArgMock).toHaveBeenNthCalledWith(1, "value");
+    expect(serializeArgMock).toHaveBeenNthCalledWith(2, 42);
     expect(instruction).toEqual({
       kind: "print",
       message: "Message",
-      args: ["first", 42],
+      args: ["value", "42"],
     });
   });
 
   it("should create a title instruction", () => {
-    const serializeLogEntryMock = vi.fn();
-    const serializeValueMock = vi.fn();
-
     const serializer: SocketIoInstructionSerializer = {
-      serializeLogEntry: serializeLogEntryMock,
-      serializeValue: serializeValueMock,
+      serializeLogEntry: vi.fn(),
+      serializeArg: vi.fn(),
     };
 
     const factory = new SocketIoInstructionFactory(serializer);
@@ -95,12 +94,9 @@ describe("SocketIoInstructionFactory", () => {
   });
 
   it("should create an empty instruction", () => {
-    const serializeLogEntryMock = vi.fn();
-    const serializeValueMock = vi.fn();
-
     const serializer: SocketIoInstructionSerializer = {
-      serializeLogEntry: serializeLogEntryMock,
-      serializeValue: serializeValueMock,
+      serializeLogEntry: vi.fn(),
+      serializeArg: vi.fn(),
     };
 
     const factory = new SocketIoInstructionFactory(serializer);

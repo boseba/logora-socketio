@@ -19,147 +19,102 @@ describe("DefaultSocketIoInstructionSerializer", () => {
     expect(serializer.serializeLogEntry(entry)).toEqual({
       timestamp: "2026-04-11T12:34:56.000Z",
       type: LogType.Warning,
+      typeName: "Warning",
       message: "Disk almost full",
-      args: ["drive-c", 92],
+      args: ["drive-c", "92"],
       scope: "Storage",
     });
   });
 
-  it("should serialize an Error instance", () => {
+  it("should serialize a string argument", () => {
     const serializer = new DefaultSocketIoInstructionSerializer();
-    const error = new Error("Something failed");
-    error.name = "CustomError";
-    error.stack = "stack trace";
 
-    expect(serializer.serializeValue(error)).toEqual({
-      kind: "error",
-      name: "CustomError",
-      message: "Something failed",
-      stack: "stack trace",
-    });
+    expect(serializer.serializeArg("hello")).toBe("hello");
   });
 
-  it("should serialize a Date instance", () => {
+  it("should serialize a number argument", () => {
     const serializer = new DefaultSocketIoInstructionSerializer();
-    const value = new Date("2026-04-11T13:00:00.000Z");
 
-    expect(serializer.serializeValue(value)).toEqual({
-      kind: "special",
-      type: "date",
-      value: "2026-04-11T13:00:00.000Z",
-    });
+    expect(serializer.serializeArg(42)).toBe("42");
+  });
+
+  it("should serialize a boolean argument", () => {
+    const serializer = new DefaultSocketIoInstructionSerializer();
+
+    expect(serializer.serializeArg(true)).toBe("true");
   });
 
   it("should serialize undefined", () => {
     const serializer = new DefaultSocketIoInstructionSerializer();
 
-    expect(serializer.serializeValue(undefined)).toEqual({
-      kind: "special",
-      type: "undefined",
-      value: "undefined",
-    });
+    expect(serializer.serializeArg(undefined)).toBe("undefined");
   });
 
-  it("should serialize symbol values", () => {
+  it("should serialize null", () => {
     const serializer = new DefaultSocketIoInstructionSerializer();
 
-    expect(serializer.serializeValue(Symbol("token"))).toEqual({
-      kind: "special",
-      type: "symbol",
-      value: "Symbol(token)",
-    });
+    expect(serializer.serializeArg(null)).toBe("null");
   });
 
-  it("should serialize function values", () => {
+  it("should serialize a Date instance", () => {
+    const serializer = new DefaultSocketIoInstructionSerializer();
+
+    expect(serializer.serializeArg(new Date("2026-04-11T13:00:00.000Z"))).toBe(
+      "2026-04-11T13:00:00.000Z",
+    );
+  });
+
+  it("should serialize a function using its name", () => {
     const serializer = new DefaultSocketIoInstructionSerializer();
 
     function namedHandler(): void {
       return;
     }
 
-    expect(serializer.serializeValue(namedHandler)).toEqual({
-      kind: "special",
-      type: "function",
-      value: "namedHandler",
-    });
+    expect(serializer.serializeArg(namedHandler)).toBe("namedHandler");
   });
 
-  it("should serialize arrays recursively", () => {
+  it("should serialize a symbol", () => {
+    const serializer = new DefaultSocketIoInstructionSerializer();
+
+    expect(serializer.serializeArg(Symbol("token"))).toBe("Symbol(token)");
+  });
+
+  it("should serialize an error using its stack when available", () => {
+    const serializer = new DefaultSocketIoInstructionSerializer();
+    const error = new Error("Something failed");
+    error.stack = "stack trace";
+
+    expect(serializer.serializeArg(error)).toBe("stack trace");
+  });
+
+  it("should serialize an error using its message when stack is missing", () => {
+    const serializer = new DefaultSocketIoInstructionSerializer();
+    const error = new Error("Something failed");
+    error.stack = "";
+
+    expect(serializer.serializeArg(error)).toBe("Something failed");
+  });
+
+  it("should serialize plain objects using JSON", () => {
     const serializer = new DefaultSocketIoInstructionSerializer();
 
     expect(
-      serializer.serializeValue([
-        "value",
-        new Date("2026-04-11T13:00:00.000Z"),
-        undefined,
-      ]),
-    ).toEqual([
-      "value",
-      {
-        kind: "special",
-        type: "date",
-        value: "2026-04-11T13:00:00.000Z",
-      },
-      {
-        kind: "special",
-        type: "undefined",
-        value: "undefined",
-      },
-    ]);
-  });
-
-  it("should serialize plain objects recursively", () => {
-    const serializer = new DefaultSocketIoInstructionSerializer();
-
-    expect(
-      serializer.serializeValue({
+      serializer.serializeArg({
         message: "ok",
         nested: {
           count: 2,
         },
       }),
-    ).toEqual({
-      message: "ok",
-      nested: {
-        count: 2,
-      },
-    });
+    ).toBe('{"message":"ok","nested":{"count":2}}');
   });
 
-  it("should serialize circular object references", () => {
+  it("should return a fallback string when an object cannot be serialized", () => {
     const serializer = new DefaultSocketIoInstructionSerializer();
 
-    const value: Record<string, unknown> = {
-      label: "root",
-    };
+    const value: Record<string, unknown> = {};
     value.self = value;
 
-    expect(serializer.serializeValue(value)).toEqual({
-      label: "root",
-      self: {
-        value: {
-          kind: "special",
-          type: "circular",
-          value: "[Circular Object]",
-        },
-      },
-    });
-  });
-
-  it("should serialize circular array references", () => {
-    const serializer = new DefaultSocketIoInstructionSerializer();
-
-    const value: unknown[] = [];
-    value.push(value);
-
-    expect(serializer.serializeValue(value)).toEqual([
-      [
-        {
-          kind: "special",
-          type: "circular",
-          value: "[Circular Array]",
-        },
-      ],
-    ]);
+    expect(serializer.serializeArg(value)).toBe("[Unserializable Object]");
   });
 });

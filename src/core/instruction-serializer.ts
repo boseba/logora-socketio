@@ -1,4 +1,6 @@
-import type { LogEntry, LogType } from "logora/module";
+import { LogType } from "logora";
+import type { LogEntry } from "logora/module";
+
 import type { SerializedLogEntry } from "../models/serialized-log-entry.interface";
 import type { SocketIoInstructionSerializer } from "../models/socket-io-instruction-serializer.interface";
 
@@ -27,7 +29,7 @@ export class DefaultSocketIoInstructionSerializer implements SocketIoInstruction
   }
 
   /**
-   * Serializes a single log argument into a string.
+   * Serializes a single log argument into a string representation.
    *
    * @param value The value to serialize.
    * @returns A string representation suitable for transport and display.
@@ -76,10 +78,31 @@ export class DefaultSocketIoInstructionSerializer implements SocketIoInstruction
   /**
    * Returns the string representation of a Logora log type.
    *
-   * @param type The log type.
-   * @returns The string representation of the provided type.
+   * @param type The log type value.
+   * @returns The corresponding log type name.
    */
   private _getTypeName(type: LogType): string {
-    return String(type);
+    switch (type) {
+      case LogType.Debug:
+        return "Debug";
+
+      case LogType.Info:
+        return "Info";
+
+      case LogType.Success:
+        return "Success";
+
+      case LogType.Warning:
+        return "Warning";
+
+      case LogType.Error:
+        return "Error";
+
+      case LogType.Highlight:
+        return "Highlight";
+
+      case LogType.Raw:
+        return "Raw";
+    }
   }
 }

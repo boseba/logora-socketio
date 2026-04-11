@@ -44,8 +44,9 @@ describe("SocketIoWriter", () => {
       entry: {
         timestamp: "2026-04-11T10:00:00.000Z",
         type: LogType.Info,
+        typeName: "Info",
         message: "Server started",
-        args: [3000],
+        args: ["3000"],
         scope: "HTTP",
       },
     });
@@ -88,7 +89,7 @@ describe("SocketIoWriter", () => {
     expect(emitMock).toHaveBeenCalledWith("socket:logs", {
       kind: "print",
       message: "Connected to room",
-      args: ["alpha", 3],
+      args: ["alpha", "3"],
     });
   });
 
