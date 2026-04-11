@@ -9,7 +9,7 @@ import type {
 } from "../models/socket-io-instruction.interface";
 
 /**
- * Creates structured Socket.IO instructions from Logora calls.
+ * Creates structured Socket.IO instructions from Logora writer calls.
  */
 export class SocketIoInstructionFactory {
   private readonly _serializer: SocketIoInstructionSerializer;
@@ -17,7 +17,7 @@ export class SocketIoInstructionFactory {
   /**
    * Creates a new instruction factory instance.
    *
-   * @param serializer The serializer used to convert runtime values.
+   * @param serializer The serializer used to convert log entries and arguments.
    */
   public constructor(serializer: SocketIoInstructionSerializer) {
     this._serializer = serializer;
@@ -50,9 +50,8 @@ export class SocketIoInstructionFactory {
     return {
       kind: "print",
       message,
-      args: args.map(
-        (arg: unknown): ReturnType<typeof this._serializer.serializeValue> =>
-          this._serializer.serializeValue(arg),
+      args: args.map((arg: unknown): string =>
+        this._serializer.serializeArg(arg),
       ),
     };
   }

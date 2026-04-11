@@ -1,16 +1,12 @@
-import type { LogEntry } from "logora/module";
-
-import type { SerializedError } from "../models/serialized-error.interface";
+import type { LogEntry, LogType } from "logora/module";
 import type { SerializedLogEntry } from "../models/serialized-log-entry.interface";
-import type { SerializedSpecialValue } from "../models/serialized-special-value.interface";
-import type { SerializedValue } from "../models/serialized-value.type";
 import type { SocketIoInstructionSerializer } from "../models/socket-io-instruction-serializer.interface";
 
 /**
  * Default serializer used by the Socket.IO output.
  *
- * It converts log entries and runtime values into transport-safe payloads
- * while preserving useful debugging information for special values.
+ * It converts log entries into lightweight transport-safe payloads
+ * suitable for real-time log streaming.
  */
 export class DefaultSocketIoInstructionSerializer implements SocketIoInstructionSerializer {
   /**
@@ -23,157 +19,67 @@ export class DefaultSocketIoInstructionSerializer implements SocketIoInstruction
     return {
       timestamp: entry.timestamp.toISOString(),
       type: entry.type,
+      typeName: this._getTypeName(entry.type),
       message: entry.message,
-      args: entry.args.map(
-        (arg: unknown): SerializedValue => this.serializeValue(arg),
-      ),
-      scope: entry.scope || undefined,
+      args: entry.args.map((arg: unknown): string => this.serializeArg(arg)),
+      scope: entry.scope,
     };
   }
 
   /**
-   * Serializes an arbitrary runtime value into a transport-safe payload.
+   * Serializes a single log argument into a string.
    *
    * @param value The value to serialize.
-   * @returns A serialized value.
+   * @returns A string representation suitable for transport and display.
    */
-  public serializeValue(value: unknown): SerializedValue {
-    return this._serializeValue(value, new WeakSet<object>());
-  }
-
-  /**
-   * Serializes a runtime value while tracking visited objects to detect
-   * circular references.
-   *
-   * @param value The value to serialize.
-   * @param seen The visited object registry.
-   * @returns A serialized value.
-   */
-  private _serializeValue(
-    value: unknown,
-    seen: WeakSet<object>,
-  ): SerializedValue {
-    if (value === null) {
-      return null;
-    }
-
-    switch (typeof value) {
-      case "string":
-      case "number":
-      case "boolean":
-        return value;
-
-      case "undefined":
-        return this._serializeSpecialValue("undefined", "undefined");
-
-      case "symbol":
-        return this._serializeSpecialValue("symbol", value.toString());
-
-      case "function":
-        return this._serializeSpecialValue(
-          "function",
-          value.name || "[anonymous]",
-        );
-
-      case "object":
-        break;
-    }
-
+  public serializeArg(value: unknown): string {
     if (value instanceof Error) {
-      return this._serializeError(value);
+      return value.stack || value.message || value.toString();
+    }
+
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (
+      typeof value === "number" ||
+      typeof value === "boolean" ||
+      typeof value === "bigint" ||
+      typeof value === "symbol"
+    ) {
+      return String(value);
+    }
+
+    if (typeof value === "function") {
+      return value.name || "[anonymous]";
+    }
+
+    if (value === undefined) {
+      return "undefined";
+    }
+
+    if (value === null) {
+      return "null";
     }
 
     if (value instanceof Date) {
-      return this._serializeSpecialValue("date", value.toISOString());
+      return value.toISOString();
     }
 
-    if (Array.isArray(value)) {
-      return this._serializeArray(value, seen);
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return "[Unserializable Object]";
     }
-
-    return this._serializeObject(value as Record<string, unknown>, seen);
   }
 
   /**
-   * Serializes an array.
+   * Returns the string representation of a Logora log type.
    *
-   * @param values The array values to serialize.
-   * @param seen The visited object registry.
-   * @returns A serialized array.
+   * @param type The log type.
+   * @returns The string representation of the provided type.
    */
-  private _serializeArray(
-    values: unknown[],
-    seen: WeakSet<object>,
-  ): SerializedValue[] {
-    if (seen.has(values)) {
-      return [this._serializeSpecialValue("circular", "[Circular Array]")];
-    }
-
-    seen.add(values);
-
-    return values.map(
-      (value: unknown): SerializedValue => this._serializeValue(value, seen),
-    );
-  }
-
-  /**
-   * Serializes a plain object.
-   *
-   * @param value The object to serialize.
-   * @param seen The visited object registry.
-   * @returns A serialized object.
-   */
-  private _serializeObject(
-    value: Record<string, unknown>,
-    seen: WeakSet<object>,
-  ): Record<string, SerializedValue> {
-    if (seen.has(value)) {
-      return {
-        value: this._serializeSpecialValue("circular", "[Circular Object]"),
-      };
-    }
-
-    seen.add(value);
-
-    const result: Record<string, SerializedValue> = {};
-
-    for (const [key, entryValue] of Object.entries(value)) {
-      result[key] = this._serializeValue(entryValue, seen);
-    }
-
-    return result;
-  }
-
-  /**
-   * Serializes an Error instance.
-   *
-   * @param error The error to serialize.
-   * @returns A serialized error payload.
-   */
-  private _serializeError(error: Error): SerializedError {
-    return {
-      kind: "error",
-      name: error.name,
-      message: error.message,
-      stack: error.stack || undefined,
-    };
-  }
-
-  /**
-   * Creates a serialized special value payload.
-   *
-   * @param type The special value type.
-   * @param value The associated string representation.
-   * @returns A serialized special value payload.
-   */
-  private _serializeSpecialValue(
-    type: SerializedSpecialValue["type"],
-    value: string,
-  ): SerializedSpecialValue {
-    return {
-      kind: "special",
-      type,
-      value,
-    };
+  private _getTypeName(type: LogType): string {
+    return String(type);
   }
 }

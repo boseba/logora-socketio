@@ -1,11 +1,10 @@
 import type { LogEntry } from "logora/module";
 
 import type { SerializedLogEntry } from "./serialized-log-entry.interface";
-import type { SerializedValue } from "./serialized-value.type";
 
 /**
- * Defines the contract used to serialize Logora entries and values
- * into transport-safe Socket.IO payloads.
+ * Defines the contract used to serialize Logora entries and arguments
+ * into lightweight Socket.IO transport payloads.
  */
 export interface SocketIoInstructionSerializer {
   /**
@@ -17,10 +16,10 @@ export interface SocketIoInstructionSerializer {
   serializeLogEntry(entry: LogEntry): SerializedLogEntry;
 
   /**
-   * Serializes an arbitrary runtime value.
+   * Serializes a single runtime argument into a string representation.
    *
    * @param value The value to serialize.
-   * @returns A transport-safe serialized value.
+   * @returns A string representation suitable for transport and display.
    */
-  serializeValue(value: unknown): SerializedValue;
+  serializeArg(value: unknown): string;
 }

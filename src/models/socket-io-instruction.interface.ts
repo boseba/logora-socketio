@@ -1,5 +1,4 @@
 import type { SerializedLogEntry } from "./serialized-log-entry.interface";
-import type { SerializedValue } from "./serialized-value.type";
 
 /**
  * Represents a structured log instruction.
@@ -33,7 +32,7 @@ export interface SocketIoPrintInstruction {
   /**
    * The serialized print arguments.
    */
-  args: SerializedValue[];
+  args: string[];
 }
 
 /**

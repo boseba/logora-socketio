@@ -1,7 +1,5 @@
 import type { LogType } from "logora";
 
-import type { SerializedValue } from "./serialized-value.type";
-
 /**
  * Represents a transport-safe serialized Logora entry.
  */
@@ -17,6 +15,11 @@ export interface SerializedLogEntry {
   type: LogType;
 
   /**
+   * The log type as a string.
+   */
+  typeName: string;
+
+  /**
    * The log message.
    */
   message: string;
@@ -24,7 +27,7 @@ export interface SerializedLogEntry {
   /**
    * The serialized arguments attached to the log entry.
    */
-  args: SerializedValue[];
+  args: string[];
 
   /**
    * The optional log scope.
